@@ -174,6 +174,8 @@
       location.reload();
     }
   }
+  window.__plShowLogin = loginCard;
+  window.__plLogout = async function () { await sb.auth.signOut(); location.reload(); };
   window.addEventListener('hashchange', route);
   route();
 })();

@@ -1,6 +1,6 @@
 // PhysioLearn service worker: always tries the network first so every release
 // reaches students on their next open; falls back to the saved copy offline.
-const CACHE = 'physiolearn-v1';
+const CACHE = 'physiolearn-v2';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'index.html', 'supabase.js', 'shim.js', 'config.js', 'manifest.webmanifest', 'icon-192.png'])));
   self.skipWaiting();
