@@ -318,7 +318,7 @@ T('t_sk1', 'مهارات', 120, 900, '#0F7F7A'); T('t_sk2', 'تتطلب البح
 T('t_src1', 'كتب · مراجع · مصادر', 66, 800); T('t_src2', 'متعددة ومبعثرة', 50, 300, '#33505B');
 T('t_ch1', 'الوصول للمعلومة', 56, 300, '#33505B'); T('t_ch2', 'تحدٍّ', 200, 900, '#E0634F');
 T('t_idea', 'ومن هنا جاءت فكرة', 56, 300, '#33505B');
-T('t_one1', 'مصادر العلاج الطبيعي', 56, 500, '#33505B'); T('t_one2', 'في مساحة واحدة', 96, 900, '#0F7F7A');
+T('t_one1', 'مصادر العلاج الطبيعي', 56, 500, '#33505B'); T('t_one2', 'في مساحة واحدة', 82, 900, '#0F7F7A');
 T('t_near1', 'أقرب إليك', 92, 900); T('t_near2', 'وأسهل في الوصول والاستفادة', 50, 300, '#33505B');
 T('t_what', 'ماذا تقدّم لك المنصة؟', 74, 900);
 T('t_summ', 'الملخصات والمحتوى العلمي', 64, 800); T('t_books', 'كتب ومراجع تخصصية', 64, 800); T('t_books2', 'توسّع معرفتك وتدعم تطورك', 46, 300, '#33505B');
@@ -336,7 +336,7 @@ T('t_and_done', 'من شاشة هاتفك مباشرة', 58, 800);
 T('t_tag1', 'مساحة تجمع المعرفة،', 70, 700, '#12303B', 'Naskh'); T('t_tag2', 'وتدعم التعلم،', 70, 700, '#0F7F7A', 'Naskh');
 T('t_tag3', 'وتقرّب المصادر التخصصية', 62, 700, '#12303B', 'Naskh'); T('t_tag4', 'من طلبة العلاج الطبيعي.', 62, 700, '#12303B', 'Naskh');
 T('t_v1', 'كل معلومة جديدة', 58, 800); T('t_v2', 'وكل مهارة تتطور', 58, 800); T('t_v3', 'وكل خطوة في طريق التعلم', 52, 800);
-T('t_v4', 'تصنع فارقاً في مستقبلك', 76, 900, '#E1A23A');
+T('t_v4', 'تصنع فارقاً في مستقبلك', 68, 900, '#E1A23A');
 T('t_st1', 'ابدأ رحلتك مع المعرفة', 76, 900); T('t_st2', 'واجعل التعلم مستمراً', 60, 300, '#0F7F7A');
 
 /* ---------- helpers for scenes ---------- */
@@ -385,16 +385,16 @@ function render(t) {
     showLine('t_deep1', t, 5.0, 6.55, W / 2, 760);
     if (t > 5.75 && t < 6.9) { slam('t_deep2', t, 5.75, 6.55, W / 2, 950, 1.5); for (let i = 0; i < 3; i++) { const p = pr(t, 5.6 + i * .08, 6.1 + i * .08, E.i3); if (p < 1) set('shock' + i, { x: W / 2, y: 950, op: p * .8 * (1 - p) * 3, s: 3 - p * 2.4 }); } }
     showLine('t_fut1', t, 6.82, 8.75, W / 2, 1180);
-    if (t > 7.75) { slam('t_fut2', t, 7.75, 8.75, W / 2, 1380, 1.2); const ap = pr(t, 7.75, 8.4); set('arrow', { x: W / 2 + 330, y: 1400 - ap * 60, op: env(t, 7.8, 8.75, .2, .35), s: 1.4 }); draw('arrow', ap); }
+    if (t > 7.75) { slam('t_fut2', t, 7.75, 8.75, W / 2, 1380, 1.2); const ap = pr(t, 7.75, 8.4); set('arrow', { x: W / 2 - 410, y: 1400 - ap * 60, op: env(t, 7.8, 8.75, .2, .35), s: 1.4 }); draw('arrow', ap); }
   }
 
   /* ---- PROBLEM 9.3 – 36 ---- */
   if (t > 9.2 && t < 36.4) {
     const jp = pr(t, 9.33, 25.5, E.lin), pv = env(t, 9.33, 27.6, .5, .6);
     if (pv) {
-      set('path', { x: W / 2, y: 1150, op: pv * .9 }); draw('path', pr(t, 9.33, 11.4, E.io3) * .25 + jp * .75);
+      set('path', { x: W / 2, y: 1230, op: pv * .9 }); draw('path', pr(t, 9.33, 11.4, E.io3) * .25 + jp * .75);
       const pe = $('jpath'), Lp = pe.getTotalLength(), pt = pe.getPointAtLength(Lp * (1 - (pr(t, 9.33, 11.4, E.io3) * .25 + jp * .75)));
-      set('jdot', { x: W / 2 - 450 + pt.x, y: 1150 - 650 + pt.y, op: pv });
+      set('jdot', { x: W / 2 - 450 + pt.x, y: 1230 - 650 + pt.y, op: pv });
     }
     showLine('t_jour', t, 9.33, 11.6, W / 2, 330);
     // lecture hall: knowledge path breaks through its walls
@@ -414,7 +414,7 @@ function render(t) {
     SCAT.forEach((s, i) => {
       if (!scv) return;
       const a = 27.6 + i * .12, ang = i * 2.39, rad = 260 + (i % 4) * 90;
-      const bx = W / 2 + Math.cos(ang) * rad * 1.05, by = 1150 + Math.sin(ang) * rad * 1.15;
+      const bx = W / 2 + Math.cos(ang) * rad * 1.05, by = 1270 + Math.sin(ang) * rad * 1.05;
       const pin = pr(t, a, a + .6, E.ob), conv = pr(t, 37.4, 38.5, E.i3);
       const jit = t > 31.6 && t < 35.8 ? Math.sin(t * 7 + i) * 6 : 0;
       set('sc' + i, { x: mix(W / 2, bx, pin) + Math.sin(t * .9 + i) * 14 + jit, y: mix(1150, by, pin) + Math.cos(t * .8 + i) * 12, op: scv * cl((t - a) / .25) * (1 - conv), s: (.62 + (i % 3) * .08) * (1 - conv * .7), r: Math.sin(i * 3.1) * 14 * (1 - conv) });
@@ -423,8 +423,8 @@ function render(t) {
     // challenge: magnifier wanders, the word shakes
     const mv = env(t, 31.67, 35.9, .4, .4);
     if (mv) { const u = t - 31.67; set('mag', { x: W / 2 + Math.sin(u * 1.7) * 280, y: 1150 + Math.sin(u * 2.3 + 1) * 300, op: mv, s: 1.5, r: Math.sin(u * 3) * 12 }); draw('mag', pr(t, 31.67, 32.4)); }
-    showLine('t_ch1', t, 31.67, 35.9, W / 2, 280);
-    if (t > 33.4 && t < 36) { slam('t_ch2', t, 33.4, 35.9, W / 2, 470, 1.6); const shake = t < 34.2 ? Math.sin(t * 60) * 10 * (1 - pr(t, 33.6, 34.2)) : 0; if (P['t_ch2']) P['t_ch2'].x += shake; }
+    showLine('t_ch1', t, 31.67, 35.9, W / 2, 240);
+    if (t > 33.4 && t < 36) { slam('t_ch2', t, 33.4, 35.9, W / 2, 470, 1.25); const shake = t < 34.2 ? Math.sin(t * 60) * 10 * (1 - pr(t, 33.6, 34.2)) : 0; if (P['t_ch2']) P['t_ch2'].x += shake; }
   }
 
   /* ---- IDEA 36.3 – 52.3 ---- */
@@ -446,7 +446,7 @@ function render(t) {
     showLine('t_one1', t, 40.07, 47.55, W / 2, 300);
     if (t > 46.1 && t < 47.7) {
       const p = pr(t, 46.13, 46.6, E.ob); showLine('t_one2', t, 46.0, 47.55, W / 2, 440);
-      set('br1', { x: W / 2 - mix(560, 420, p), y: 440, op: env(t, 46.13, 47.55, .15, .3), s: .7 }); set('br2', { x: W / 2 + mix(560, 420, p), y: 440, op: env(t, 46.13, 47.55, .15, .3), s: .7 });
+      set('br1', { x: W / 2 - mix(560, 470, p), y: 440, op: env(t, 46.13, 47.55, .15, .3), s: .7 }); set('br2', { x: W / 2 + mix(560, 470, p), y: 440, op: env(t, 46.13, 47.55, .15, .3), s: .7 });
     }
     showLine('t_near1', t, 47.92, 52.3, W / 2, 300); showLine('t_near2', t, 49.72, 52.3, W / 2, 420);
   }
@@ -498,14 +498,14 @@ function render(t) {
     if (bv) {
       set('brain2', { x: 250, y: 820, op: bv, s: 1.25 }); draw('brain2', pr(t, 101.1, 102.4));
       set('limb', { x: 270, y: 1420, op: bv, s: 1.2 }); draw('limb', pr(t, 101.9, 103.4));
-      set('bl1', { x: 250, y: 1040, op: bv * pr(t, 101.6, 102.1) }); set('bl2', { x: 270, y: 1640, op: bv * pr(t, 102.8, 103.3) });
-      const bp = pr(t, 102.2, 103.6); set('bridge', { x: 250, y: 1230, op: bv, s: .5, r: 90 }); draw('bridge', bp);
+      set('bl1', { x: 250, y: 1010, op: bv * pr(t, 101.6, 102.1) }); set('bl2', { x: 270, y: 1640, op: bv * pr(t, 102.8, 103.3) });
+      const bp = pr(t, 102.2, 103.6); set('bridge', { x: 250, y: 1255, op: bv, s: .38, r: 90 }); draw('bridge', bp);
     }
     showLine('t_case5', t, 101.08, 109.0, W / 2, 330);
     chapter(t, 109.46, 119.84, '٠٥', 'قنوات يوتيوب');
     showLine('t_yt1', t, 109.46, 113.6, W / 2, 330);
-    if (t > 113.6) { slam('t_yt2', t, 113.75, 116.8, W / 2, 380, 1.3); for (let i = 0; i < 5; i++) { const p = ((t - 113.75) * .45 + i / 5) % 1; set('hz' + i, { x: W / 2, y: 380, op: env(t, 113.75, 119.84, .3, .4) * (1 - p) * .7, s: .15 + p * 1.2 }); } }
-    showLine('t_yt3', t, 116.92, 119.84, W / 2, 530);
+    if (t > 113.6) { slam('t_yt2', t, 113.75, 116.8, W / 2, 360, 1.2); for (let i = 0; i < 5; i++) { const p = ((t - 113.75) * .45 + i / 5) % 1; set('hz' + i, { x: W / 2, y: 380, op: env(t, 113.75, 119.84, .3, .4) * (1 - p) * .7, s: .15 + p * 1.2 }); } }
+    showLine('t_yt3', t, 116.92, 119.84, W / 2, 505);
   }
 
   /* ---- ACCOUNT 120.5 – 139 ---- */
@@ -517,8 +517,8 @@ function render(t) {
     if (k === 'tall') { const sc = t < 129 ? mix(0, 850, pr(t, 126.5, 127.5, E.io3)) : mix(700, 1060, pr(t, 131.6, 132.5, E.io3)); $('tallwrap').style.transform = `translateY(${-sc}px)`; }
     tap('ph1', t, 124.25, ...BOX.person); hl('ph1', t, 124.9, 126.2, 195, 47 + 712, 362, 80, 16);
     hl('ph1', t, 127.7, 129.2, 195, 47 + 122 + 100, 362, 236, 22); hl('ph1', t, 132.6, 133.5, 195, 47 + 110 + 150, 362, 300, 22);
-    showLine('t_acc1', t, 120.5, 124.0, W / 2, 330); showLine('t_acc2', t, 124.18, 133.4, W / 2, 300);
-    [['ch_prog', 126.32, 420], ['ch_save', 129.42, 530], ['ch_back', 131.51, 640]].forEach(([id, a, y]) => { const v = env(t, a, 133.4, .3, .35); if (v) set(id, { x: W / 2 + (1 - pr(t, a, a + .4)) * 80, y: y - 30, op: v }); });
+    showLine('t_acc1', t, 120.5, 124.0, W / 2, 330); showLine('t_acc2', t, 124.18, 133.4, W / 2, 275);
+    [['ch_prog', 126.32, 435], ['ch_save', 129.42, 510], ['ch_back', 131.51, 585]].forEach(([id, a, y]) => { const v = env(t, a, 133.4, .3, .35); if (v) set(id, { x: W / 2 + (1 - pr(t, a, a + .4)) * 80, y: y - 30, op: v }); });
     const dv = env(t, 133.7, 139.2, .4, .4);
     if (dv) {
       set('tab', { x: 800, y: 1080, op: dv * pr(t, 133.9, 134.4), s: 1.05 }); draw('tab', pr(t, 133.9, 135));
@@ -626,11 +626,11 @@ function render(t) {
   /* ---- BRAND 199 – 207 ---- */
   if (t > 198.9 && t < 207.3) {
     const v = env(t, 199.0, 207.1, .5, .5), g = pr(t, 199.0, 206.8, E.io3);
-    phoneAt('ph1', t, W / 2, mix(1600, 1450, g), mix(.92, 1.06, g), v * (1 - pr(t, 205.8, 206.8)), { ry: mix(-14, 0, g) });
+    phoneAt('ph1', t, W / 2, mix(1700, 1560, g), mix(.9, 1.0, g), v * (1 - pr(t, 205.8, 206.8)), { ry: mix(-14, 0, g) });
     L('ph1', 'home');
     set('logo', { x: W / 2, y: 330, op: v, s: .62 * mix(.85, 1, pr(t, 199.14, 199.7, E.ob)) }); $('logo_wm').style.clipPath = 'none';
-    showLine('t_tag1', t, 200.01, 207.1, W / 2, 520); showLine('t_tag2', t, 201.78, 207.1, W / 2, 630);
-    showLine('t_tag3', t, 203.04, 207.1, W / 2, 740); showLine('t_tag4', t, 204.6, 207.1, W / 2, 840);
+    showLine('t_tag1', t, 200.01, 207.1, W / 2, 500); showLine('t_tag2', t, 201.78, 207.1, W / 2, 630);
+    showLine('t_tag3', t, 203.04, 207.1, W / 2, 760); showLine('t_tag4', t, 204.6, 207.1, W / 2, 885);
   }
 
   /* ---- VALUES 207.2 – 214.8 ---- */
@@ -640,7 +640,7 @@ function render(t) {
       const p = pr(t, a, a + .5, E.ob); if (t > a && v) { set(id, { x: 890, y, op: v, s: 1.05 * p }); draw(id, pr(t, a, a + 1)); }
       showLine(tl, t, a, 214.8, 410, y);
     });
-    if (t > 212.4) { slam('t_v4', t, 212.44, 214.8, W / 2, 1330, 1.3); shock(t, 212.5, W / 2, 1330); }
+    if (t > 212.4) { slam('t_v4', t, 212.44, 214.8, W / 2, 1330, 1.12); shock(t, 212.5, W / 2, 1330); }
   }
 
   /* ---- CLOSE 215 – 219 ---- */

@@ -33,8 +33,10 @@ def whoosh(d=.55, up=True):
     ks = np.linspace(.008, .07, n) if up else np.linspace(.07, .008, n)
     y = np.empty(n); acc = 0.
     for i in range(n): acc += ks[i] * (x[i] - acc); y[i] = acc
+    y2 = np.empty(n); acc = 0.
+    for i in range(n): acc += ks[i] * (y[i] - acc); y2[i] = acc
     e = np.sin(np.linspace(0, np.pi, n)) ** 1.6
-    return y * e * 2.6
+    return y2 * e * 4.2
 def impact(d=1.4):
     tt = t_(d); f = 55 * np.exp(-tt * 3) + 38
     s = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 3.2) * .9
@@ -79,7 +81,7 @@ for a, b in [(160.6, 161.7), (177.0, 178.1)]:               # typing the link
 for c in range(4):                                         # tired url typing loop
     for x in np.arange(139.5 + c * 1.7, 139.5 + c * 1.7 + 1.19, .09): add(tick_sfx(), x, .35)
 add(chime(990, 1.6), 172.45, .35); add(chime(990, 1.6), 192.85, .35)   # app opens
-add(riser(1.6), 217.5, .4); add(impact(1.6), 219.1, .55); add(chime(880, 3.0), 219.1, .55); add(chime(1320, 2.4), 222.45, .35)
+add(whoosh(.9), 218.5, .12); add(impact(1.6), 219.1, .25); add(chime(523.25, 3.0), 219.1, .22)
 
 # ---- music bed: soft pad chord progression + gentle pulse ----
 tt = np.arange(N) / SR
@@ -94,10 +96,12 @@ for k in range(int(LEN / seg) + 1):
     e = np.minimum(1, ts / 1.2) * np.minimum(1, (len(ts) / SR - ts) / .9)
     bed[a:b] += s * e
 pulse = (np.sin(2 * np.pi * 2.0 * tt) * .5 + .5) ** 6 * np.sin(2 * np.pi * 110 * tt) * .35
-bed = bed * .08 + pulse * .05
+bed = bed * .08 + pulse * .05 * np.clip((212 - tt) / 3, 0, 1)
 # shimmer layer for the brand + closing
 sh = sum(np.sin(2 * np.pi * f * tt) for f in [880, 1108.7, 1318.5]) * .02
-bed += sh * np.clip((tt - 199) / 2, 0, 1) * np.clip((228 - tt) / 2, 0, 1)
+# (shimmer removed: the sustained high tones were harsh at the end)
+# after the narration ends the bed is no longer ducked, so bring it down to a soft tail
+bed *= 1 - .62 * np.clip((tt - 216.5) / 2.5, 0, 1)
 # silent beat before the climax word, fade in/out
 bed *= 1 - .85 * np.clip(1 - np.abs(tt - 212.15) / .35, 0, 1)
 bed *= np.clip(tt / 1.5, 0, 1) * np.clip((LEN - tt) / 2.5, 0, 1)
