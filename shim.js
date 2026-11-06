@@ -96,10 +96,20 @@
   };
 
   // ---------- admin identity ----------
-  async function isAdmin() {
-    var r = await sb.auth.getSession();
-    var u = r && r.data && r.data.session && r.data.session.user;
-    return !!(u && u.email && u.email.toLowerCase() === String(cfg.admin).toLowerCase());
+  // admin = listed in the `admins` table (checked by the database). Falls back to the owner email
+  // only if the admins table has not been created yet.
+  var adminP = null;
+  function isAdmin() {
+    if (adminP) return adminP;
+    adminP = (async function () {
+      var r = await sb.auth.getSession();
+      var u = r && r.data && r.data.session && r.data.session.user;
+      if (!u) return false;
+      var q = await sb.rpc('is_admin');
+      if (!q.error) return q.data === true;
+      return !!(u.email && u.email.toLowerCase() === String(cfg.admin).toLowerCase());
+    })();
+    return adminP;
   }
   var user = {
     canEdit: isAdmin,
@@ -297,6 +307,41 @@
     var s = box.querySelector('#pl-ps');
     if (s) s.oninput = function () { var q = s.value.trim().toLowerCase(); box.querySelectorAll('#pl-pl details').forEach(function (d) { d.hidden = q && d.dataset.k.indexOf(q) < 0; }); };
   }
+
+  // ---------- admin: manage admins ----------
+  async function adminsPage() {
+    var w = overlay('pl-adm', '<div class="pl-card" style="max-width:520px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2>المشرفون</h2><button class="pl-x" id="pl-ac" style="height:36px;padding:0 14px">إغلاق</button></div><div id="pl-ab"><p>جارٍ التحميل…</p></div></div>');
+    w.querySelector('#pl-ac').onclick = function () { w.remove(); };
+    var box = w.querySelector('#pl-ab');
+    async function load() {
+      var own = await sb.rpc('is_owner'), lst = await sb.rpc('list_admins');
+      if (lst.error) { box.innerHTML = '<p class="pl-msg err">ميزة المشرفين غير مفعّلة بعد. شغّل كود SQL الخاص بالمشرفين في Supabase.</p>'; return; }
+      var owner = own.data === true;
+      function fmt(d) { try { return new Date(d).toLocaleDateString('ar-OM', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } }
+      box.innerHTML = (owner ? '<p>اطلب من الشخص أن ينشئ حساباً في التطبيق بإيميله أولاً، ثم أضف إيميله هنا. يصبح مشرفاً عند فتحه التطبيق من جديد.</p>' +
+        '<form id="pl-af" style="display:flex;gap:8px"><input id="pl-ae" class="ltr" type="email" placeholder="email@example.com" style="flex:1"><button class="pl-go" type="submit" style="padding:0 18px">إضافة</button></form><div class="pl-msg" id="pl-am"></div>' :
+        '<p>فقط المالك يستطيع إضافة المشرفين أو إزالتهم.</p>') +
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">' + (lst.data || []).map(function (a) {
+          return '<div style="display:flex;align-items:center;gap:10px;border:1px solid #DCE4E5;border-radius:14px;padding:10px 12px"><div style="flex:1;min-width:0"><div dir="ltr" style="font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis">' + esc(a.email) + '</div><div style="font-size:12px;color:#4A616B">' + (a.role === 'owner' ? 'المالك' : 'مشرف') + ' · أُضيف ' + fmt(a.added_at) + '</div></div>' +
+            (owner && a.role !== 'owner' ? '<button data-rm="' + esc(a.email) + '" style="height:34px;padding:0 12px;border:none;border-radius:10px;background:#FCECEA;color:#B42318;font:inherit;font-weight:700;cursor:pointer">إزالة</button>' : '') + '</div>';
+        }).join('') + '</div>';
+      var f = box.querySelector('#pl-af');
+      if (f) f.onsubmit = async function (e) {
+        e.preventDefault();
+        var em = box.querySelector('#pl-ae').value.trim(), m = box.querySelector('#pl-am');
+        if (!/^\S+@\S+\.\S+$/.test(em)) { m.className = 'pl-msg err'; m.textContent = 'اكتب إيميلاً صحيحاً.'; return; }
+        var r = await sb.rpc('add_admin', { p_email: em });
+        if (r.error) { m.className = 'pl-msg err'; m.textContent = /no_account/.test(r.error.message) ? 'لا يوجد حساب بهذا الإيميل. اطلب منه إنشاء حساب في التطبيق أولاً.' : 'تعذّرت الإضافة: ' + r.error.message; return; }
+        m.className = 'pl-msg ok'; m.textContent = 'أُضيف ' + em + ' (الحساب أُنشئ ' + fmt(r.data && r.data.account_created) + '). تأكد أن هذا التاريخ يطابق وقت تسجيله.';
+        setTimeout(load, 2500);
+      };
+      box.querySelectorAll('[data-rm]').forEach(function (b) {
+        b.onclick = async function () { b.disabled = true; var r = await sb.rpc('remove_admin', { p_email: b.dataset.rm }); if (r.error) { b.disabled = false; return; } load(); };
+      });
+    }
+    load();
+  }
+  window.__plShowAdmins = adminsPage;
 
   async function route() {
     if (location.hash === '#admin' || location.hash === '#login') {
