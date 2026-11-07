@@ -452,7 +452,8 @@
         if (!sm) { skipped.push((i + 1) + ': لم أجد «' + (it.semester || '?') + '» في ' + y.name); return; }
         if (!it.subject || !it.title) { skipped.push((i + 1) + ': بدون مادة أو عنوان'); return; }
         var su = findOrMake('subject', it.subject, sm.id), tp = it.topic ? findOrMake('topic', it.topic, su.id) : null;
-        var now = Date.now() + i, r = { type: it.type || 'summary', title: String(it.title).trim(), desc: it.desc || '', status: 'draft', createdAt: now, updatedAt: now, topicId: (tp || su).id };
+        var CAT = { summary: 'summary', 'ملخص': 'summary', lecture: 'pdf', 'محاضرة': 'pdf', questions: 'quiz', 'أسئلة اختبار': 'quiz' };
+        var now = Date.now() + i, r = { type: it.type || 'summary', cat: CAT[it.category] || (it.type === 'pdf' ? 'pdf' : (it.type || 'summary')), title: String(it.title).trim(), desc: it.desc || '', status: 'draft', createdAt: now, updatedAt: now, topicId: (tp || su).id };
         if (r.type === 'summary') r.body = it.body || '';
         if (r.type === 'quiz') r.questions = (it.questions || []).filter(function (q) { return q && q.q && q.opts && q.opts.length >= 2; });
         if (it.fileUrl) { r.fileUrl = it.fileUrl; r.fileName = it.fileName || 'Google Drive'; r.fileSize = 0; }

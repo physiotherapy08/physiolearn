@@ -75,7 +75,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
       </div>
       <div class="box">
         <h2><span>٣</span>الملخص</h2>
-        <div class="kinds" id="kind"><button type="button" data-v="summary" class="on">ملخص</button><button type="button" data-v="pdf">ملف / محاضرة</button><button type="button" data-v="quiz">أسئلة اختبار</button></div>
+        <div class="kinds" id="kind"><button type="button" data-v="summary" class="on">ملخص</button><button type="button" data-v="pdf">محاضرة</button><button type="button" data-v="quiz">أسئلة اختبار</button></div>
         <label>العنوان<input id="title" placeholder="مثال: Brachial Plexus — Overview"></label>
         <label>النص <small>(الصق الملخص هنا، أو ارفع ملفاً بالأسفل)</small><textarea id="body" placeholder="اكتب أو الصق الملخص…"></textarea></label>
         <div class="file" id="drop" tabindex="0">اضغط لاختيار ملف <b>PDF أو Word أو صورة</b><br><small>حتى 20 ميغابايت</small></div>
@@ -141,7 +141,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
     if (!body && !file) return err.textContent = 'الصق نص الملخص أو ارفع ملفاً.';
     var go = $('go'); go.disabled = true; go.textContent = 'جارٍ الإرسال…';
     try { localStorage.setItem('pl.submit', JSON.stringify({ who: who, inst: inst })); } catch (e2) {}
-    var kinds = { summary: 'ملخص', pdf: 'ملف / محاضرة', quiz: 'أسئلة اختبار' };
+    var kinds = { summary: 'ملخص', pdf: 'محاضرة', quiz: 'أسئلة اختبار' };
     if (cfg.driveUrl) {
       try {
         var b64 = file ? await new Promise(function (ok, no) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).split(',')[1] || ''); }; fr.onerror = no; fr.readAsDataURL(file); }) : null;
