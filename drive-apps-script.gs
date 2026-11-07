@@ -14,6 +14,8 @@ function doPost(e) {
     var root = folder_(DriveApp.getRootFolder(), ROOT), f = root;
     [d.inst_name, d.year_name, d.sem_name, d.subject_name].forEach(function (n) { if (n) f = folder_(f, clean_(n)); });
     if (d.topic) f = folder_(f, clean_(d.topic));
+    var TYPE_FOLDER = { 'ملخص': 'الملخصات', 'محاضرة': 'المحاضرات', 'أسئلة اختبار': 'أسئلة الاختبارات' };
+    if (d.kind_name) f = folder_(f, TYPE_FOLDER[d.kind_name] || clean_(d.kind_name));
     var stamp = Utilities.formatDate(new Date(), 'Asia/Muscat', 'yyyy-MM-dd HH.mm');
     var base = clean_(d.title) + ' - ' + clean_(d.contributor) + ' - ' + stamp, links = [];
     if (d.fileB64) {
