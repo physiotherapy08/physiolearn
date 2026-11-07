@@ -343,6 +343,58 @@
   }
   window.__plShowAdmins = adminsPage;
 
+  // ---------- admin: team submissions (from submit.html) ----------
+  function loadJSZip() {
+    if (window.JSZip) return Promise.resolve(window.JSZip);
+    return new Promise(function (ok, no) { var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = function () { ok(window.JSZip); }; sc.onerror = no; document.head.appendChild(sc); });
+  }
+  async function submissionsPage() {
+    var w = overlay('pl-sub', '<div class="pl-card" style="max-width:560px;height:calc(100% - 32px)"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2>مساهمات الفريق</h2><button class="pl-x" id="pl-sc" style="height:36px;padding:0 14px">إغلاق</button></div><div id="pl-sb" style="display:flex;flex-direction:column;gap:10px"><p>جارٍ التحميل…</p></div></div>');
+    w.querySelector('#pl-sc').onclick = function () { w.remove(); };
+    var box = w.querySelector('#pl-sb'), link = location.origin + location.pathname.replace(/index\.html$/, '') + 'submit.html';
+    async function load() {
+      var r = await sb.from('submissions').select('*').order('created_at', { ascending: false });
+      if (r.error) { box.innerHTML = '<p class="pl-msg err">ميزة المساهمات غير مفعّلة بعد. شغّل كود SQL الخاص بها في Supabase.</p>'; return; }
+      var rows = r.data || [], fresh = rows.filter(function (x) { return x.status !== 'done'; });
+      var ks = { summary: 'ملخص', pdf: 'ملف', quiz: 'أسئلة' }, ins = { oc: 'كلية عمان', uoz: 'جامعة نزوى' };
+      box.innerHTML = '<div style="background:#E3F2F0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.7">رابط الإرسال للفريق:<div dir="ltr" style="font-weight:700;word-break:break-all;margin:4px 0 8px">' + esc(link) + '</div><button class="pl-x" id="pl-cp" style="height:36px;padding:0 14px">نسخ الرابط</button></div>' +
+        '<div style="display:flex;gap:8px"><button class="pl-go" id="pl-zip" style="flex:1" ' + (fresh.length ? '' : 'disabled') + '>تنزيل الجديد (' + fresh.length + ') كملف ZIP</button></div>' +
+        '<button class="pl-x" id="pl-mark" ' + (fresh.length ? '' : 'disabled') + '>تعليم الجديد كمستلَم</button><div class="pl-msg" id="pl-zm"></div>' +
+        (rows.length ? '' : '<p>لا توجد مساهمات بعد. أرسل الرابط لفريقك.</p>') +
+        rows.map(function (x) {
+          return '<div style="border:1px solid #DCE4E5;border-radius:14px;padding:10px 12px;opacity:' + (x.status === 'done' ? '.55' : '1') + '"><div style="font-weight:700;unicode-bidi:plaintext;text-align:start">' + esc(x.title) + '</div>' +
+            '<div style="font-size:12.5px;color:#4A616B;line-height:1.6">' + esc(ins[x.inst] || '') + ' · ' + esc(x.year_name || '') + ' · ' + esc(x.sem_name || '') + ' · ' + esc(x.subject_name || '') + (x.topic ? ' · ' + esc(x.topic) : '') + '</div>' +
+            '<div style="font-size:12px;color:#7F9198">' + (ks[x.kind] || '') + ' · ' + esc(x.contributor) + (x.file_name ? ' · ملف مرفق' : '') + (x.status === 'done' ? ' · مُستلَم' : ' · جديد') + '</div></div>';
+        }).join('');
+      box.querySelector('#pl-cp').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'تم النسخ'; } catch (e) {} };
+      box.querySelector('#pl-zip').onclick = async function () {
+        var m = box.querySelector('#pl-zm'), btn = this; btn.disabled = true; m.className = 'pl-msg ok'; m.textContent = 'جارٍ التجهيز…';
+        try {
+          var JSZip = await loadJSZip(), zip = new JSZip(), out = [];
+          for (var i = 0; i < fresh.length; i++) {
+            var x = fresh[i], item = Object.assign({}, x); delete item.code;
+            if (x.file_path) {
+              var su = await sb.storage.from('submissions').createSignedUrl(x.file_path, 600);
+              if (!su.error) { var bl = await (await fetch(su.data.signedUrl)).blob(); var fn = 'files/' + x.id.slice(0, 8) + '_' + (x.file_name || 'file').replace(/[\\/:*?"<>|]+/g, '_'); zip.file(fn, bl); item.file_in_zip = fn; }
+            }
+            out.push(item); m.textContent = 'جارٍ التجهيز… ' + (i + 1) + ' / ' + fresh.length;
+          }
+          zip.file('submissions.json', JSON.stringify(out, null, 2));
+          var blob = await zip.generateAsync({ type: 'blob' }), a = document.createElement('a');
+          a.href = URL.createObjectURL(blob); a.download = 'physiolearn_submissions_' + new Date().toISOString().slice(0, 10) + '.zip';
+          document.body.appendChild(a); a.click(); a.remove();
+          m.textContent = 'تم التنزيل. أرسل هذا الملف لـ Claude للفرز، ثم اضغط «تعليم الجديد كمستلَم».';
+        } catch (e) { m.className = 'pl-msg err'; m.textContent = 'تعذّر التجهيز: ' + (e && e.message || e); }
+        btn.disabled = false;
+      };
+      box.querySelector('#pl-mark').onclick = async function () {
+        this.disabled = true; await sb.from('submissions').update({ status: 'done' }).in('id', fresh.map(function (x) { return x.id; })); load();
+      };
+    }
+    load();
+  }
+  window.__plShowSubs = submissionsPage;
+
   async function route() {
     if (location.hash === '#admin' || location.hash === '#login') {
       if (me) { history.replaceState(null, '', location.pathname); return; }

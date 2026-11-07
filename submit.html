@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PhysioLearn · إرسال ملخص</title>
+<meta name="theme-color" content="#F5F7F7">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600&display=swap">
+<style>
+:root{--bg:#F5F7F7;--ink:#12303B;--mute:#6B8590;--line:#DCE4E5;--teal:#0F7F7A;--tealS:#E3F2F0;--blue:#234F8F;--err:#B42318;--card:#FFFFFF}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+header{display:flex;align-items:center;gap:10px;direction:ltr;justify-content:flex-end;margin-bottom:18px}
+.lg{width:34px;height:34px;border-radius:10px;background:var(--teal);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.lg i{width:14px;height:14px;border:2.6px solid #fff;border-radius:50% 50% 50% 3px;display:block}
+.wm{font:600 18px 'Readex Pro',sans-serif}.wm b{color:var(--teal);font-weight:600}
+h1{font:600 26px 'Readex Pro',sans-serif;margin:0 0 6px}
+.sub{color:var(--mute);font-size:14.5px;line-height:1.7;margin:0 0 20px}
+form{display:flex;flex-direction:column;gap:16px}
+.box{background:var(--card);border:1px solid #E3E9EA;border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.box h2{font:600 16px 'Readex Pro',sans-serif;margin:0;display:flex;align-items:center;gap:8px}
+.box h2 span{width:24px;height:24px;border-radius:8px;background:var(--tealS);color:var(--teal);font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#4A616B}
+label small{font-weight:400;color:var(--mute)}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);border:1px solid var(--line);background:#FAFCFC;border-radius:14px;padding:12px 14px;outline:none;width:100%}
+textarea{min-height:190px;line-height:1.8;resize:vertical;unicode-bidi:plaintext}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(15,127,122,.12);background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.row{grid-template-columns:1fr}}
+.seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:#E6EEEF}
+.seg button{flex:1;height:44px;border:none;border-radius:11px;background:transparent;font:600 15px 'Readex Pro',sans-serif;color:#5B7078;cursor:pointer}
+.seg button.on{background:#fff;color:#0B5F5B;box-shadow:0 1px 3px rgba(18,48,59,.12)}
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kinds button{height:46px;border-radius:13px;border:1px solid var(--line);background:#fff;font:600 14px 'IBM Plex Sans Arabic';color:var(--ink);cursor:pointer}
+.kinds button.on{border-color:var(--teal);background:var(--tealS);color:#0B5F5B}
+.file{border:1.5px dashed #B9CDD0;border-radius:16px;padding:16px;text-align:center;color:var(--mute);font-size:14px;cursor:pointer;background:#FAFCFC}
+.file b{color:var(--teal)}
+.hint{font-size:12.5px;color:var(--mute);line-height:1.6;margin:0}
+.err{color:var(--err);font-size:14px;min-height:20px}
+.go{height:54px;border:none;border-radius:16px;background:var(--teal);color:#fff;font:700 17px 'IBM Plex Sans Arabic';cursor:pointer}
+.go:disabled{opacity:.6}
+.done{display:none;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:40px 10px}
+.done .ok{width:76px;height:76px;border-radius:50%;background:var(--tealS);display:flex;align-items:center;justify-content:center}
+.done h2{font:600 22px 'Readex Pro',sans-serif;margin:0}
+.ghost{height:50px;border-radius:14px;border:1.5px solid var(--teal);background:#fff;color:var(--teal);font:700 15px 'IBM Plex Sans Arabic';cursor:pointer;padding:0 22px}
+button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="wm">Physio<b>Learn</b></div><div class="lg"><i></i></div></header>
+  <section id="formView">
+    <h1>إرسال ملخص لفريق PhysioLearn</h1>
+    <p class="sub">املأ البيانات وأرسل ملخصك. يراجعه فريق الإدارة قبل نشره في التطبيق. لا يحتاج تسجيل دخول.</p>
+    <form id="f" novalidate>
+      <div class="box">
+        <h2><span>١</span>بياناتك</h2>
+        <div class="row">
+          <label>اسمك<input id="who" autocomplete="name" placeholder="الاسم الكامل"></label>
+          <label>رمز الفريق<input id="code" autocomplete="off" placeholder="يعطيك إياه المشرف"></label>
+        </div>
+      </div>
+      <div class="box">
+        <h2><span>٢</span>مكان الملخص</h2>
+        <div class="seg" id="inst"><button type="button" data-v="oc" class="on">كلية عمان</button><button type="button" data-v="uoz">جامعة نزوى</button></div>
+        <div class="row">
+          <label>السنة<select id="year"></select></label>
+          <label>الفصل<select id="sem"></select></label>
+        </div>
+        <label>المادة<select id="subj"></select></label>
+        <label id="subjNewL" hidden>اسم المادة<input id="subjNew" placeholder="مثال: Anatomy I"></label>
+        <label>الموضوع <small>(اختياري)</small><input id="topic" placeholder="مثال: Upper Limb"></label>
+      </div>
+      <div class="box">
+        <h2><span>٣</span>الملخص</h2>
+        <div class="kinds" id="kind"><button type="button" data-v="summary" class="on">ملخص</button><button type="button" data-v="pdf">ملف / محاضرة</button><button type="button" data-v="quiz">أسئلة اختبار</button></div>
+        <label>العنوان<input id="title" placeholder="مثال: Brachial Plexus — Overview"></label>
+        <label>النص <small>(الصق الملخص هنا، أو ارفع ملفاً بالأسفل)</small><textarea id="body" placeholder="اكتب أو الصق الملخص…"></textarea></label>
+        <div class="file" id="drop" tabindex="0">اضغط لاختيار ملف <b>PDF أو Word أو صورة</b><br><small>حتى 20 ميغابايت</small></div>
+        <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.ppt,.pptx,image/*" hidden>
+        <label>ملاحظات للمراجع <small>(اختياري)</small><input id="notes" placeholder="مثال: الملخص من محاضرة د. فلان"></label>
+        <p class="hint">للأسئلة: اكتب كل سؤال ثم خياراته، وضع علامة * بجانب الإجابة الصحيحة.</p>
+      </div>
+      <div class="err" id="err" role="alert"></div>
+      <button class="go" id="go" type="submit">إرسال الملخص</button>
+    </form>
+  </section>
+  <section class="done" id="doneView">
+    <div class="ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0F7F7A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>وصل ملخصك، شكراً لك</h2>
+    <p class="sub" style="margin:0">سيراجعه فريق الإدارة ثم يُنشر في التطبيق.</p>
+    <button class="ghost" id="again" type="button">إرسال ملخص آخر</button>
+  </section>
+</div>
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  var cfg = window.PL_CONFIG, sb = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: false } });
+  var $ = function (id) { return document.getElementById(id); };
+  var nodes = [], inst = 'oc', kind = 'summary', file = null;
+  try { var saved = JSON.parse(localStorage.getItem('pl.submit') || '{}'); $('who').value = saved.who || ''; $('code').value = saved.code || ''; if (saved.inst) inst = saved.inst; } catch (e) {}
+  function opt(sel, list, empty) {
+    sel.innerHTML = '<option value="">' + (empty || 'اختر…') + '</option>' + list.map(function (n) { return '<option value="' + n.id + '">' + n.name.replace(/</g, '&lt;') + '</option>'; }).join('');
+  }
+  var kids = function (pid, type) { return nodes.filter(function (n) { return (n.parentId || null) === (pid || null) && n.type === type && (type !== 'year' || (n.inst || 'oc') === inst); }).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }); };
+  function fillYears() { opt($('year'), kids(null, 'year')); fillSems(); }
+  function fillSems() { var y = $('year').value; opt($('sem'), y ? kids(y, 'semester') : []); fillSubj(); }
+  function fillSubj() {
+    var s = $('sem').value, list = s ? kids(s, 'subject') : [];
+    opt($('subj'), list); $('subj').insertAdjacentHTML('beforeend', '<option value="__new">مادة غير موجودة في القائمة…</option>');
+    $('subjNewL').hidden = $('subj').value !== '__new';
+  }
+  function paintSeg() { [].forEach.call($('inst').children, function (b) { b.classList.toggle('on', b.dataset.v === inst); }); }
+  $('inst').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; inst = b.dataset.v; paintSeg(); fillYears(); };
+  $('kind').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; kind = b.dataset.v; [].forEach.call($('kind').children, function (x) { x.classList.toggle('on', x === b); }); };
+  $('year').onchange = fillSems; $('sem').onchange = fillSubj; $('subj').onchange = function () { $('subjNewL').hidden = $('subj').value !== '__new'; };
+  $('drop').onclick = function () { $('fileIn').click(); };
+  $('drop').onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('fileIn').click(); } };
+  $('fileIn').onchange = function () {
+    var f = this.files[0]; this.value = ''; if (!f) return;
+    if (f.size > 20 * 1048576) { $('err').textContent = 'الملف أكبر من 20 ميغابايت.'; return; }
+    file = f; $('err').textContent = '';
+    $('drop').innerHTML = 'الملف: <b>' + f.name.replace(/</g, '&lt;') + '</b><br><small>' + (f.size / 1048576).toFixed(1) + ' م.ب · اضغط للتغيير</small>';
+  };
+  sb.from('items').select('id,data').eq('col', 'nodes').then(function (r) {
+    nodes = (r.data || []).map(function (x) { return Object.assign({ id: x.id }, x.data); });
+    paintSeg(); fillYears();
+  });
+  var name = function (sel) { var o = sel.options[sel.selectedIndex]; return o && o.value ? o.textContent : ''; };
+  $('f').onsubmit = async function (e) {
+    e.preventDefault(); var err = $('err'); err.textContent = '';
+    var who = $('who').value.trim(), code = $('code').value.trim(), title = $('title').value.trim(), body = $('body').value.trim();
+    var subjNew = $('subj').value === '__new' ? $('subjNew').value.trim() : '';
+    if (!who) return err.textContent = 'اكتب اسمك.';
+    if (!code) return err.textContent = 'اكتب رمز الفريق.';
+    if (!$('year').value || !$('sem').value) return err.textContent = 'اختر السنة والفصل.';
+    if (!$('subj').value || ($('subj').value === '__new' && !subjNew)) return err.textContent = 'اختر المادة أو اكتب اسمها.';
+    if (!title) return err.textContent = 'اكتب عنوان الملخص.';
+    if (!body && !file) return err.textContent = 'الصق نص الملخص أو ارفع ملفاً.';
+    var go = $('go'); go.disabled = true; go.textContent = 'جارٍ الإرسال…';
+    try { localStorage.setItem('pl.submit', JSON.stringify({ who: who, code: code, inst: inst })); } catch (e2) {}
+    var path = null;
+    if (file) {
+      path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + file.name.replace(/[^A-Za-z0-9._-]+/g, '_').slice(-60);
+      var up = await sb.storage.from('submissions').upload(path, file, { contentType: file.type || undefined });
+      if (up.error) { go.disabled = false; go.textContent = 'إرسال الملخص'; return err.textContent = 'تعذّر رفع الملف، حاول مرة أخرى.'; }
+    }
+    var row = { contributor: who, code: code, inst: inst, year_id: $('year').value, year_name: name($('year')), sem_id: $('sem').value, sem_name: name($('sem')),
+      subject_id: subjNew ? null : $('subj').value, subject_name: subjNew || name($('subj')), topic: $('topic').value.trim() || null,
+      kind: kind, title: title, content: body || null, file_path: path, file_name: file ? file.name : null, file_size: file ? file.size : null, notes: $('notes').value.trim() || null };
+    var ins = await sb.from('submissions').insert(row);
+    go.disabled = false; go.textContent = 'إرسال الملخص';
+    if (ins.error) return err.textContent = /row-level|policy|violates/i.test(ins.error.message) ? 'رمز الفريق غير صحيح.' : 'تعذّر الإرسال: ' + ins.error.message;
+    $('formView').style.display = 'none'; $('doneView').style.display = 'flex'; window.scrollTo(0, 0);
+  };
+  $('again').onclick = function () {
+    ['title', 'body', 'notes', 'topic'].forEach(function (id) { $(id).value = ''; }); file = null;
+    $('drop').innerHTML = 'اضغط لاختيار ملف <b>PDF أو Word أو صورة</b><br><small>حتى 20 ميغابايت</small>';
+    $('doneView').style.display = 'none'; $('formView').style.display = 'block'; $('title').focus();
+  };
+})();
+</script>
+</body>
+</html>
