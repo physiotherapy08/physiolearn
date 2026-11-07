@@ -145,6 +145,20 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
     if (!body && !file) return err.textContent = 'الصق نص الملخص أو ارفع ملفاً.';
     var go = $('go'); go.disabled = true; go.textContent = 'جارٍ الإرسال…';
     try { localStorage.setItem('pl.submit', JSON.stringify({ who: who, code: code, inst: inst })); } catch (e2) {}
+    var kinds = { summary: 'ملخص', pdf: 'ملف / محاضرة', quiz: 'أسئلة اختبار' };
+    if (cfg.driveUrl) {
+      try {
+        var b64 = file ? await new Promise(function (ok, no) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).split(',')[1] || ''); }; fr.onerror = no; fr.readAsDataURL(file); }) : null;
+        var payload = { code: code, contributor: who, inst: inst, inst_name: inst === 'uoz' ? 'جامعة نزوى' : 'كلية عمان', year_name: name($('year')), sem_name: name($('sem')),
+          subject_name: subjNew || name($('subj')), topic: $('topic').value.trim(), kind: kind, kind_name: kinds[kind], title: title, content: body, notes: $('notes').value.trim(),
+          file_name: file ? file.name : null, mime: file ? (file.type || 'application/octet-stream') : null, fileB64: b64 };
+        var res = await fetch(cfg.driveUrl, { method: 'POST', body: JSON.stringify(payload) });
+        var j = await res.json();
+        go.disabled = false; go.textContent = 'إرسال الملخص';
+        if (!j.ok) return err.textContent = j.error === 'bad_code' ? 'رمز الفريق غير صحيح.' : 'تعذّر الإرسال، حاول مرة أخرى.';
+      } catch (e3) { go.disabled = false; go.textContent = 'إرسال الملخص'; return err.textContent = 'تعذّر الإرسال، تحقق من الإنترنت وحاول مرة أخرى.'; }
+      $('formView').style.display = 'none'; $('doneView').style.display = 'flex'; window.scrollTo(0, 0); return;
+    }
     var path = null;
     if (file) {
       path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + file.name.replace(/[^A-Za-z0-9._-]+/g, '_').slice(-60);

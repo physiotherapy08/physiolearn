@@ -353,6 +353,13 @@
     w.querySelector('#pl-sc').onclick = function () { w.remove(); };
     var box = w.querySelector('#pl-sb'), link = location.origin + location.pathname.replace(/index\.html$/, '') + 'submit.html';
     async function load() {
+      if (cfg.driveUrl) {
+        box.innerHTML = '<div style="background:#E3F2F0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.7">رابط الإرسال للفريق:<div dir="ltr" style="font-weight:700;word-break:break-all;margin:4px 0 8px">' + esc(link) + '</div><button class="pl-x" id="pl-cp" style="height:36px;padding:0 14px">نسخ الرابط</button></div>' +
+          '<p>تُحفظ المساهمات في Google Drive الخاص بك داخل مجلد <b>«PhysioLearn - مساهمات الفريق»</b>، مرتبة حسب الجهة ثم السنة ثم الفصل ثم المادة، ومعها جدول <b>«سجل مساهمات PhysioLearn»</b>.</p>' +
+          '<p>للفرز: افتح المجلد في Google Drive ← اضغط النقاط الثلاث ← <b>تنزيل</b> (يصير ملف ZIP) ← أرسله لـ Claude.</p>';
+        box.querySelector('#pl-cp').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'تم النسخ'; } catch (e) {} };
+        return;
+      }
       var r = await sb.from('submissions').select('*').order('created_at', { ascending: false });
       if (r.error) { box.innerHTML = '<p class="pl-msg err">ميزة المساهمات غير مفعّلة بعد. شغّل كود SQL الخاص بها في Supabase.</p>'; return; }
       var rows = r.data || [], fresh = rows.filter(function (x) { return x.status !== 'done'; });
