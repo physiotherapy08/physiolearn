@@ -75,7 +75,8 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
       </div>
       <div class="box">
         <h2><span>٣</span>الملخص</h2>
-        <div class="kinds" id="kind"><button type="button" data-v="summary" class="on">ملخص</button><button type="button" data-v="pdf">محاضرة</button><button type="button" data-v="quiz">أسئلة اختبار</button></div>
+        <label style="margin-bottom:-6px">نوع المحتوى</label>
+        <div class="kinds" id="kind"><button type="button" data-v="summary">ملخص</button><button type="button" data-v="pdf">محاضرة</button><button type="button" data-v="quiz">أسئلة اختبار</button></div>
         <label>العنوان<input id="title" placeholder="مثال: Brachial Plexus — Overview"></label>
         <label>النص <small>(الصق الملخص هنا، أو ارفع ملفاً بالأسفل)</small><textarea id="body" placeholder="اكتب أو الصق الملخص…"></textarea></label>
         <div class="file" id="drop" tabindex="0">اضغط لاختيار ملف <b>PDF أو Word أو صورة</b><br><small>حتى 20 ميغابايت</small></div>
@@ -100,7 +101,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
 (function () {
   var cfg = window.PL_CONFIG, sb = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: false } });
   var $ = function (id) { return document.getElementById(id); };
-  var nodes = [], inst = 'oc', kind = 'summary', file = null;
+  var nodes = [], inst = 'oc', kind = null, file = null;
   try { var saved = JSON.parse(localStorage.getItem('pl.submit') || '{}'); $('who').value = saved.who || ''; if (saved.inst) inst = saved.inst; } catch (e) {}
   function opt(sel, list, empty) {
     sel.innerHTML = '<option value="">' + (empty || 'اختر…') + '</option>' + list.map(function (n) { return '<option value="' + n.id + '">' + n.name.replace(/</g, '&lt;') + '</option>'; }).join('');
@@ -137,7 +138,8 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
     if (!who) return err.textContent = 'اكتب اسمك.';
     if (!$('year').value || !$('sem').value) return err.textContent = 'اختر السنة والفصل.';
     if (!$('subj').value || ($('subj').value === '__new' && !subjNew)) return err.textContent = 'اختر المادة أو اكتب اسمها.';
-    if (!title) return err.textContent = 'اكتب عنوان الملخص.';
+    if (!kind) return err.textContent = 'اختر نوع المحتوى: ملخص أو محاضرة أو أسئلة اختبار.';
+    if (!title) return err.textContent = 'اكتب العنوان.';
     if (!body && !file) return err.textContent = 'الصق نص الملخص أو ارفع ملفاً.';
     var go = $('go'); go.disabled = true; go.textContent = 'جارٍ الإرسال…';
     try { localStorage.setItem('pl.submit', JSON.stringify({ who: who, inst: inst })); } catch (e2) {}
@@ -170,7 +172,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
     $('formView').style.display = 'none'; $('doneView').style.display = 'flex'; window.scrollTo(0, 0);
   };
   $('again').onclick = function () {
-    ['title', 'body', 'notes', 'topic'].forEach(function (id) { $(id).value = ''; }); file = null;
+    ['title', 'body', 'notes', 'topic'].forEach(function (id) { $(id).value = ''; }); file = null; kind = null; [].forEach.call($('kind').children, function (x) { x.classList.remove('on'); });
     $('drop').innerHTML = 'اضغط لاختيار ملف <b>PDF أو Word أو صورة</b><br><small>حتى 20 ميغابايت</small>';
     $('doneView').style.display = 'none'; $('formView').style.display = 'block'; $('title').focus();
   };
