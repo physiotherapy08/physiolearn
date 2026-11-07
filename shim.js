@@ -402,6 +402,82 @@
   }
   window.__plShowSubs = submissionsPage;
 
+  // ---------- Google Drive files open inside the app ----------
+  function driveId(u) {
+    var m = String(u || '').match(/drive\.google\.com\/file\/d\/([\w-]{10,})/) || String(u || '').match(/[?&]id=([\w-]{10,})/) || String(u || '').match(/docs\.google\.com\/\w+\/d\/([\w-]{10,})/);
+    return m ? m[1] : null;
+  }
+  window.__plView = function (url, title) {
+    var id = driveId(url); if (!id) return false;
+    var old = document.getElementById('pl-view'); if (old) old.remove();
+    var w = document.createElement('div'); w.id = 'pl-view'; w.setAttribute('dir', 'rtl');
+    w.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#F5F7F7;display:flex;flex-direction:column;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif';
+    w.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:#fff;border-bottom:1px solid #E3E9EA">' +
+      '<button id="pl-vx" aria-label="رجوع" style="width:40px;height:40px;border-radius:50%;border:1px solid #DCE4E5;background:#fff;font-size:20px;cursor:pointer;color:#12303B">›</button>' +
+      '<div style="flex:1;min-width:0;font-weight:700;font-size:15px;color:#12303B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext;text-align:start">' + esc(title || '') + '</div>' +
+      '<a href="https://drive.google.com/file/d/' + id + '/view" target="_blank" rel="noopener" style="font-size:13px;font-weight:700;color:#0F7F7A;text-decoration:none;white-space:nowrap">فتح في Drive</a></div>' +
+      '<iframe src="https://drive.google.com/file/d/' + id + '/preview" style="flex:1;width:100%;border:none;background:#fff" allow="autoplay"></iframe>';
+    document.body.appendChild(w);
+    w.querySelector('#pl-vx').onclick = function () { w.remove(); };
+    return true;
+  };
+
+  // ---------- admin: import a sorted batch (JSON prepared by Claude) ----------
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+  async function importPage() {
+    var w = overlay('pl-imp', '<div class="pl-card" style="max-width:520px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2>استيراد المحتوى</h2><button class="pl-x" id="pl-ix" style="height:36px;padding:0 14px">إغلاق</button></div>' +
+      '<p>اختر ملف الاستيراد (JSON) الذي جهّزه لك Claude بعد الفرز. يُضاف كل شيء <b>كمسودّات</b>، فلا يراه الطلاب حتى تنشره.</p>' +
+      '<button class="pl-go" id="pl-ipick">اختيار ملف الاستيراد</button><input type="file" id="pl-ifile" accept=".json,application/json" hidden><div id="pl-ib"></div></div>');
+    w.querySelector('#pl-ix').onclick = function () { w.remove(); };
+    var box = w.querySelector('#pl-ib');
+    w.querySelector('#pl-ipick').onclick = function () { w.querySelector('#pl-ifile').click(); };
+    w.querySelector('#pl-ifile').onchange = async function () {
+      var f = this.files[0]; this.value = ''; if (!f) return;
+      var data; try { data = JSON.parse(await f.text()); } catch (e) { box.innerHTML = '<p class="pl-msg err">الملف ليس ملف استيراد صحيحاً.</p>'; return; }
+      var items = Array.isArray(data) ? data : (data.items || []);
+      var nodes = Object.keys(cache.nodes || {}).map(function (id) { return Object.assign({ id: id }, cache.nodes[id]); });
+      var newNodes = [], newRes = [], skipped = [];
+      var norm = function (x) { return String(x || '').trim().toLowerCase(); };
+      function findOrMake(type, name, parentId, extra) {
+        var hit = nodes.concat(newNodes).find(function (n) { return n.type === type && (n.parentId || null) === (parentId || null) && norm(n.name) === norm(name); });
+        if (hit) return hit;
+        var n = Object.assign({ id: uid(), type: type, name: String(name).trim(), parentId: parentId || null, at: Date.now() + newNodes.length }, extra || {});
+        newNodes.push(n); return n;
+      }
+      items.forEach(function (it, i) {
+        var inst = it.inst === 'uoz' || /نزوى/.test(it.inst || '') ? 'uoz' : 'oc';
+        var y = nodes.find(function (n) { return n.type === 'year' && !n.parentId && (n.inst || 'oc') === inst && norm(n.name) === norm(it.year); });
+        if (!y) { skipped.push((i + 1) + ': لم أجد «' + (it.year || '?') + '»'); return; }
+        var sm = nodes.find(function (n) { return n.type === 'semester' && n.parentId === y.id && norm(n.name) === norm(it.semester); });
+        if (!sm) { skipped.push((i + 1) + ': لم أجد «' + (it.semester || '?') + '» في ' + y.name); return; }
+        if (!it.subject || !it.title) { skipped.push((i + 1) + ': بدون مادة أو عنوان'); return; }
+        var su = findOrMake('subject', it.subject, sm.id), tp = it.topic ? findOrMake('topic', it.topic, su.id) : null;
+        var now = Date.now() + i, r = { type: it.type || 'summary', title: String(it.title).trim(), desc: it.desc || '', status: 'draft', createdAt: now, updatedAt: now, topicId: (tp || su).id };
+        if (r.type === 'summary') r.body = it.body || '';
+        if (r.type === 'quiz') r.questions = (it.questions || []).filter(function (q) { return q && q.q && q.opts && q.opts.length >= 2; });
+        if (it.fileUrl) { r.fileUrl = it.fileUrl; r.fileName = it.fileName || 'Google Drive'; r.fileSize = 0; }
+        newRes.push({ id: uid(), data: r });
+      });
+      box.innerHTML = '<div style="background:#F2F6F6;border-radius:14px;padding:12px 14px;margin-top:12px;line-height:1.9;font-size:14px">سيُضاف: <b>' + newRes.length + '</b> مورد كمسودّات' +
+        (newNodes.length ? '، و<b>' + newNodes.filter(function (n) { return n.type === 'subject'; }).length + '</b> مادة جديدة، و<b>' + newNodes.filter(function (n) { return n.type === 'topic'; }).length + '</b> موضوع جديد' : '') + '.' +
+        (skipped.length ? '<div style="color:#B42318;margin-top:6px">تخطّي ' + skipped.length + ':<br>' + skipped.slice(0, 8).map(esc).join('<br>') + '</div>' : '') + '</div>' +
+        (newRes.length ? '<button class="pl-go" id="pl-igo" style="width:100%;margin-top:10px">استيراد الآن</button>' : '') + '<div class="pl-msg" id="pl-im"></div>';
+      var go = box.querySelector('#pl-igo'); if (!go) return;
+      go.onclick = async function () {
+        go.disabled = true; var m = box.querySelector('#pl-im'); m.className = 'pl-msg ok'; m.textContent = 'جارٍ الاستيراد…';
+        var rows = newNodes.map(function (n) { var d = Object.assign({}, n); delete d.id; return { col: 'nodes', id: n.id, data: d }; })
+          .concat(newRes.map(function (x) { return { col: 'resources', id: x.id, data: x.data }; }));
+        for (var i = 0; i < rows.length; i += 200) {
+          var r = await sb.from('items').upsert(rows.slice(i, i + 200));
+          if (r.error) { m.className = 'pl-msg err'; m.textContent = 'تعذّر الاستيراد: ' + r.error.message; go.disabled = false; return; }
+        }
+        await loadAll();
+        m.textContent = 'تم. ستجدها في لوحة الإدارة ← المحتوى ← مسودات.';
+      };
+    };
+  }
+  window.__plShowImport = importPage;
+
   async function route() {
     if (location.hash === '#admin' || location.hash === '#login') {
       if (me) { history.replaceState(null, '', location.pathname); return; }

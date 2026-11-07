@@ -19,7 +19,9 @@ function doPost(e) {
     if (d.fileB64) {
       var ext = (String(d.file_name || '').match(/\.[A-Za-z0-9]{1,5}$/) || [''])[0];
       var blob = Utilities.newBlob(Utilities.base64Decode(d.fileB64), d.mime || 'application/octet-stream', base + ext);
-      links.push(f.createFile(blob).getUrl());
+      var file = f.createFile(blob);
+      try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e1) {}
+      links.push(file.getUrl());
     }
     if (d.content) {
       var txt = 'العنوان: ' + d.title + '\nالمرسل: ' + d.contributor + '\nالمكان: ' + [d.inst_name, d.year_name, d.sem_name, d.subject_name, d.topic].filter(String).join(' / ') +
