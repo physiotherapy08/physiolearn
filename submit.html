@@ -60,10 +60,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
     <form id="f" novalidate>
       <div class="box">
         <h2><span>١</span>بياناتك</h2>
-        <div class="row">
-          <label>اسمك<input id="who" autocomplete="name" placeholder="الاسم الكامل"></label>
-          <label>رمز الفريق<input id="code" autocomplete="off" placeholder="يعطيك إياه المشرف"></label>
-        </div>
+        <label>اسمك<input id="who" autocomplete="name" placeholder="الاسم الكامل"></label>
       </div>
       <div class="box">
         <h2><span>٢</span>مكان الملخص</h2>
@@ -104,7 +101,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
   var cfg = window.PL_CONFIG, sb = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: false } });
   var $ = function (id) { return document.getElementById(id); };
   var nodes = [], inst = 'oc', kind = 'summary', file = null;
-  try { var saved = JSON.parse(localStorage.getItem('pl.submit') || '{}'); $('who').value = saved.who || ''; $('code').value = saved.code || ''; if (saved.inst) inst = saved.inst; } catch (e) {}
+  try { var saved = JSON.parse(localStorage.getItem('pl.submit') || '{}'); $('who').value = saved.who || ''; if (saved.inst) inst = saved.inst; } catch (e) {}
   function opt(sel, list, empty) {
     sel.innerHTML = '<option value="">' + (empty || 'اختر…') + '</option>' + list.map(function (n) { return '<option value="' + n.id + '">' + n.name.replace(/</g, '&lt;') + '</option>'; }).join('');
   }
@@ -135,16 +132,15 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
   var name = function (sel) { var o = sel.options[sel.selectedIndex]; return o && o.value ? o.textContent : ''; };
   $('f').onsubmit = async function (e) {
     e.preventDefault(); var err = $('err'); err.textContent = '';
-    var who = $('who').value.trim(), code = $('code').value.trim(), title = $('title').value.trim(), body = $('body').value.trim();
+    var who = $('who').value.trim(), code = 'physio2026', title = $('title').value.trim(), body = $('body').value.trim();
     var subjNew = $('subj').value === '__new' ? $('subjNew').value.trim() : '';
     if (!who) return err.textContent = 'اكتب اسمك.';
-    if (!code) return err.textContent = 'اكتب رمز الفريق.';
     if (!$('year').value || !$('sem').value) return err.textContent = 'اختر السنة والفصل.';
     if (!$('subj').value || ($('subj').value === '__new' && !subjNew)) return err.textContent = 'اختر المادة أو اكتب اسمها.';
     if (!title) return err.textContent = 'اكتب عنوان الملخص.';
     if (!body && !file) return err.textContent = 'الصق نص الملخص أو ارفع ملفاً.';
     var go = $('go'); go.disabled = true; go.textContent = 'جارٍ الإرسال…';
-    try { localStorage.setItem('pl.submit', JSON.stringify({ who: who, code: code, inst: inst })); } catch (e2) {}
+    try { localStorage.setItem('pl.submit', JSON.stringify({ who: who, inst: inst })); } catch (e2) {}
     var kinds = { summary: 'ملخص', pdf: 'ملف / محاضرة', quiz: 'أسئلة اختبار' };
     if (cfg.driveUrl) {
       try {
@@ -155,8 +151,8 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
         var res = await fetch(cfg.driveUrl, { method: 'POST', body: JSON.stringify(payload) });
         var j = await res.json();
         go.disabled = false; go.textContent = 'إرسال الملخص';
-        if (!j.ok) return err.textContent = j.error === 'bad_code' ? 'رمز الفريق غير صحيح.' : 'تعذّر الإرسال، حاول مرة أخرى.';
-      } catch (e3) { go.disabled = false; go.textContent = 'إرسال الملخص'; return err.textContent = 'تعذّر الإرسال، تحقق من الإنترنت وحاول مرة أخرى.'; }
+        if (!j.ok) return err.textContent = 'تعذّر الإرسال (' + (j.error || 'خطأ غير معروف') + ')';
+      } catch (e3) { go.disabled = false; go.textContent = 'إرسال الملخص'; return err.textContent = 'تعذّر الوصول إلى Google Drive (' + (e3 && e3.message || e3) + ')'; }
       $('formView').style.display = 'none'; $('doneView').style.display = 'flex'; window.scrollTo(0, 0); return;
     }
     var path = null;
