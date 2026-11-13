@@ -58,8 +58,10 @@ function onFormSubmitMove(e) {
   var inst = a['الجهة'] || '';
   var year = a['السنة (كلية عمان)'] || a['السنة (جامعة نزوى)'] || '';
   var sem = a['الفصل (كلية عمان)'] || a['الفصل (جامعة نزوى)'] || '';
+  var subj = String(a['المادة'] || '');
+  if (subj.indexOf('مادة غير موجودة') === 0) subj = 'مواد أخرى'; else subj = subj.split(' — ')[0];
   var f = folder_(DriveApp.getRootFolder(), ROOT);
-  [inst, year, sem, a['المادة'], a['الموضوع']].forEach(function (n) { if (n) f = folder_(f, clean_(n)); });
+  [inst, year, sem, subj, a['الموضوع']].forEach(function (n) { if (n) f = folder_(f, clean_(n)); });
   var kind = a['نوع المحتوى'];
   if (kind) f = folder_(f, TYPE_FOLDER[kind] || clean_(kind));
   var base = clean_(a['العنوان']) + ' - ' + clean_(a['اسمك']);
@@ -73,6 +75,37 @@ function onFormSubmitMove(e) {
     });
   });
   if (a['نص الملخص']) f.createFile(base + '.txt', a['نص الملخص'], MimeType.PLAIN_TEXT);
+}
+
+// ---- subjects list from the PhysioLearn app (Supabase), refreshed daily ----
+var SB_URL = 'https://ogwqvnqkrcwhyqvbpeaf.supabase.co', SB_KEY = 'sb_publishable_TgRwBAhCAGzurE65vI5Fxg_3bFiI0TL';
+var OTHER = 'مادة غير موجودة في القائمة (اكتب اسمها في الملاحظات)';
+function updateSubjects() {
+  var id = PropertiesService.getScriptProperties().getProperty('FORM');
+  if (!id) ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'onFormSubmitMove') id = t.getTriggerSourceId(); });
+  var form = FormApp.openById(id);
+  var rows = JSON.parse(UrlFetchApp.fetch(SB_URL + '/rest/v1/items?col=eq.nodes&select=id,data', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }).getContentText());
+  var by = {}; rows.forEach(function (r) { by[r.id] = r.data; });
+  var INST = { oc: 'كلية عمان', uoz: 'جامعة نزوى' }, list = [];
+  rows.forEach(function (r) {
+    if (r.data.type !== 'subject') return;
+    var path = [], n = by[r.data.parentId], inst = '';
+    while (n) { path.unshift(n.name); if (n.type === 'year') inst = INST[n.inst] || ''; n = by[n.parentId]; }
+    list.push({ label: r.data.name + ' — ' + [inst].concat(path).filter(String).join(' · '), sort: [inst].concat(path).join('|') + '|' + r.data.name });
+  });
+  list.sort(function (a, b) { return a.sort < b.sort ? -1 : 1; });
+  var names = list.map(function (x) { return x.label; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).concat([OTHER]);
+  var old = form.getItems().filter(function (it) { return it.getTitle() === 'المادة'; })[0];
+  if (old && old.getType() === FormApp.ItemType.LIST) { old.asListItem().setChoiceValues(names); }
+  else {
+    var idx = old ? old.getIndex() : form.getItems().length;
+    var li = form.addListItem().setTitle('المادة').setHelpText('اختر مادتك. إذا لم تجدها اختر الخيار الأخير واكتب اسمها في الملاحظات').setChoiceValues(names).setRequired(true);
+    form.moveItem(li.getIndex(), idx);
+    if (old) form.deleteItem(old);
+  }
+  if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'updateSubjects'; }))
+    ScriptApp.newTrigger('updateSubjects').timeBased().everyHours(6).create();
+  Logger.log('عدد المواد في القائمة: ' + (names.length - 1));
 }
 
 function folder_(parent, name) { var it = parent.getFoldersByName(name); return it.hasNext() ? it.next() : parent.createFolder(name); }
