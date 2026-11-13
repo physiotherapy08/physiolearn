@@ -352,28 +352,26 @@
     var w = overlay('pl-sub', '<div class="pl-card" style="max-width:560px;height:calc(100% - 32px)"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2>مساهمات الفريق</h2><button class="pl-x" id="pl-sc" style="height:36px;padding:0 14px">إغلاق</button></div><div id="pl-sb" style="display:flex;flex-direction:column;gap:10px"><p>جارٍ التحميل…</p></div></div>');
     w.querySelector('#pl-sc').onclick = function () { w.remove(); };
     var box = w.querySelector('#pl-sb'), link = location.origin + location.pathname.replace(/index\.html$/, '') + 'submit.html';
+    function linkBox() { return '<div style="background:#E3F2F0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.7">رابط الإرسال للفريق:<div dir="ltr" style="font-weight:700;word-break:break-all;margin:4px 0 8px">' + esc(link) + '</div><button class="pl-x" id="pl-cp" style="height:36px;padding:0 14px">نسخ الرابط</button></div>'; }
+    function cp() { box.querySelector('#pl-cp').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'تم النسخ'; } catch (e) {} }; }
     async function load() {
-      if (cfg.driveUrl) {
-        box.innerHTML = '<div style="background:#E3F2F0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.7">رابط الإرسال للفريق:<div dir="ltr" style="font-weight:700;word-break:break-all;margin:4px 0 8px">' + esc(link) + '</div><button class="pl-x" id="pl-cp" style="height:36px;padding:0 14px">نسخ الرابط</button></div>' +
-          '<p>تُحفظ المساهمات في Google Drive الخاص بك داخل مجلد <b>«PhysioLearn - مساهمات الفريق»</b>، مرتبة حسب الجهة ثم السنة ثم الفصل ثم المادة، ومعها جدول <b>«سجل مساهمات PhysioLearn»</b>.</p>' +
-          '<p>للفرز: افتح المجلد في Google Drive ← اضغط النقاط الثلاث ← <b>تنزيل</b> (يصير ملف ZIP) ← أرسله لـ Claude.</p>';
-        box.querySelector('#pl-cp').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'تم النسخ'; } catch (e) {} };
-        return;
-      }
+      var driveHead = '';
+      if (cfg.driveUrl) driveHead = '<p>تُحفظ المساهمات في Google Drive الخاص بك داخل مجلد <b>«PhysioLearn - مساهمات الفريق»</b>، مرتبة حسب الجهة ثم السنة ثم الفصل ثم المادة، ومعها جدول <b>«سجل مساهمات PhysioLearn»</b>. للفرز: افتح المجلد ← النقاط الثلاث ← <b>تنزيل</b> (ZIP) ← أرسله لـ Claude.</p>' +
+        '<p style="font-weight:700;margin-top:4px">الصندوق الاحتياطي</p><p style="font-size:13px;color:#4A616B">إذا لم يستجب Google Drive وقت الإرسال، تُحفظ المساهمة هنا تلقائياً حتى لا تضيع.</p>';
       var r = await sb.from('submissions').select('*').order('created_at', { ascending: false });
-      if (r.error) { box.innerHTML = '<p class="pl-msg err">ميزة المساهمات غير مفعّلة بعد. شغّل كود SQL الخاص بها في Supabase.</p>'; return; }
+      if (r.error) { box.innerHTML = linkBox() + driveHead + '<p class="pl-msg err">الصندوق الاحتياطي غير مفعّل بعد. شغّل كود SQL الخاص بالمساهمات في Supabase.</p>'; cp(); return; }
       var rows = r.data || [], fresh = rows.filter(function (x) { return x.status !== 'done'; });
       var ks = { summary: 'ملخص', pdf: 'ملف', quiz: 'أسئلة' }, ins = { oc: 'كلية عمان', uoz: 'جامعة نزوى' };
-      box.innerHTML = '<div style="background:#E3F2F0;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.7">رابط الإرسال للفريق:<div dir="ltr" style="font-weight:700;word-break:break-all;margin:4px 0 8px">' + esc(link) + '</div><button class="pl-x" id="pl-cp" style="height:36px;padding:0 14px">نسخ الرابط</button></div>' +
+      box.innerHTML = linkBox() + driveHead +
         '<div style="display:flex;gap:8px"><button class="pl-go" id="pl-zip" style="flex:1" ' + (fresh.length ? '' : 'disabled') + '>تنزيل الجديد (' + fresh.length + ') كملف ZIP</button></div>' +
         '<button class="pl-x" id="pl-mark" ' + (fresh.length ? '' : 'disabled') + '>تعليم الجديد كمستلَم</button><div class="pl-msg" id="pl-zm"></div>' +
-        (rows.length ? '' : '<p>لا توجد مساهمات بعد. أرسل الرابط لفريقك.</p>') +
+        (rows.length ? '' : '<p>' + (cfg.driveUrl ? 'الصندوق الاحتياطي فارغ.' : 'لا توجد مساهمات بعد. أرسل الرابط لفريقك.') + '</p>') +
         rows.map(function (x) {
           return '<div style="border:1px solid #DCE4E5;border-radius:14px;padding:10px 12px;opacity:' + (x.status === 'done' ? '.55' : '1') + '"><div style="font-weight:700;unicode-bidi:plaintext;text-align:start">' + esc(x.title) + '</div>' +
             '<div style="font-size:12.5px;color:#4A616B;line-height:1.6">' + esc(ins[x.inst] || '') + ' · ' + esc(x.year_name || '') + ' · ' + esc(x.sem_name || '') + ' · ' + esc(x.subject_name || '') + (x.topic ? ' · ' + esc(x.topic) : '') + '</div>' +
             '<div style="font-size:12px;color:#7F9198">' + (ks[x.kind] || '') + ' · ' + esc(x.contributor) + (x.file_name ? ' · ملف مرفق' : '') + (x.status === 'done' ? ' · مُستلَم' : ' · جديد') + '</div></div>';
         }).join('');
-      box.querySelector('#pl-cp').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'تم النسخ'; } catch (e) {} };
+      cp();
       box.querySelector('#pl-zip').onclick = async function () {
         var m = box.querySelector('#pl-zm'), btn = this; btn.disabled = true; m.className = 'pl-msg ok'; m.textContent = 'جارٍ التجهيز…';
         try {
