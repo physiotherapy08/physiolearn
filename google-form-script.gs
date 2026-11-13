@@ -104,7 +104,15 @@ function tree_() {
 function buildLists() {
   var form = form_(), tree = tree_();
   var det = form.getItems(FormApp.ItemType.PAGE_BREAK).filter(function (p) { return p.getTitle() === 'تفاصيل المحتوى'; })[0].asPageBreakItem();
-  form.getItems().slice(0, det.getIndex()).reverse().forEach(function (it) { form.deleteItem(it); });
+  var oldItems = form.getItems().slice(0, det.getIndex());
+  // Google refuses to delete a section that a choice still jumps to, so clear all jumps first
+  oldItems.forEach(function (it) {
+    var t = it.getType();
+    if (t === FormApp.ItemType.MULTIPLE_CHOICE) it.asMultipleChoiceItem().setChoiceValues(['-']);
+    else if (t === FormApp.ItemType.LIST) it.asListItem().setChoiceValues(['-']);
+    else if (t === FormApp.ItemType.PAGE_BREAK) it.asPageBreakItem().setGoToPage(FormApp.PageNavigationType.CONTINUE);
+  });
+  oldItems.reverse().forEach(function (it) { form.deleteItem(it); });
   form.getItems().filter(function (it) { return it.getTitle() === 'المادة'; }).forEach(function (it) { form.deleteItem(it); });
   var made = [];
   function put(it) { made.push(it); return it; }
