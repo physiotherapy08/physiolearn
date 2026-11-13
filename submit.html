@@ -174,7 +174,7 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
         if (!j) throw lastErr || new Error('no response');
         go.disabled = false; go.textContent = 'إرسال الملخص';
         if (!j.ok) return err.textContent = 'تعذّر الإرسال (' + (j.error || 'خطأ غير معروف') + ')';
-      } catch (e3) { bar(0); go.disabled = false; go.textContent = 'إرسال الملخص'; return err.textContent = 'تعذّر الوصول إلى Google Drive بعد 3 محاولات. تأكد من الإنترنت وحاول بعد دقيقة' + (file && file.size > 25 * 1048576 ? '، أو صغّر حجم الملف' : '') + '. (' + (e3 && e3.message || e3) + ')'; }
+      } catch (e3) { bar(0); go.disabled = false; go.textContent = 'إرسال الملخص'; return err.textContent = 'تعذّر الوصول إلى Google Drive بعد 3 محاولات. تأكد من الإنترنت وحاول بعد دقيقة' + (file && file.size > 25 * 1048576 ? '، أو صغّر حجم الملف' : '') + '. (' + (e3 && e3.message || e3) + ' · v31)'; }
       $('formView').style.display = 'none'; $('doneView').style.display = 'flex'; window.scrollTo(0, 0); return;
     }
     var path = null;
