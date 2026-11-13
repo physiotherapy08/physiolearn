@@ -135,17 +135,15 @@ button:focus-visible,.file:focus-visible{outline:3px solid rgba(15,127,122,.35);
     var b = $('prog'); if (!b) return;
     b.style.display = p > 0 ? 'block' : 'none'; b.firstElementChild.style.width = Math.round(p * 100) + '%';
   }
+  // NOTE: a plain "simple" request only. Listening to upload progress (xhr.upload) forces a CORS
+  // preflight that Google Apps Script cannot answer, so the browser reports a network error.
   function send(body, attempt) {
-    return new Promise(function (ok, no) {
-      var x = new XMLHttpRequest();
-      x.open('POST', cfg.driveUrl); x.timeout = 180000;
-      x.upload.onprogress = function (e) { if (e.lengthComputable) { bar(Math.max(.03, e.loaded / e.total * .9)); $('go').textContent = (attempt > 1 ? 'محاولة ' + attempt + ' · ' : '') + 'جارٍ الرفع ' + Math.round(e.loaded / e.total * 100) + '%'; } };
-      x.upload.onload = function () { bar(.95); $('go').textContent = 'جارٍ الحفظ في Drive…'; };
-      x.onload = function () { try { ok(JSON.parse(x.responseText)); } catch (e) { no(new Error('bad response ' + x.status)); } };
-      x.onerror = function () { no(new Error('network')); };
-      x.ontimeout = function () { no(new Error('timeout')); };
-      x.send(body);
-    });
+    var p = .04, go = $('go'), t = setInterval(function () { p = Math.min(.92, p + (.95 - p) * .06); bar(p); go.textContent = (attempt > 1 ? 'محاولة ' + attempt + ' · ' : '') + 'جارٍ الرفع إلى Drive ' + Math.round(p * 100) + '%'; }, 400);
+    var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 180000);
+    return fetch(cfg.driveUrl, { method: 'POST', body: body, redirect: 'follow', signal: ctl ? ctl.signal : undefined })
+      .catch(function (e) { throw new Error(e && e.name === 'AbortError' ? 'timeout' : 'network'); })
+      .then(function (r) { return r.text().then(function (txt) { try { return JSON.parse(txt); } catch (e) { throw new Error('bad response ' + r.status); } }); })
+      .finally(function () { clearInterval(t); clearTimeout(to); bar(1); });
   }
   var name = function (sel) { var o = sel.options[sel.selectedIndex]; return o && o.value ? o.textContent : ''; };
   $('f').onsubmit = async function (e) {
